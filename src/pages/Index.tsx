@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/DevToolsHub/Sidebar';
 import { MainContent } from '@/components/DevToolsHub/MainContent';
@@ -14,12 +13,15 @@ const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTool, setEditingTool] = useState<Tool | null>(null);
   const [currentView, setCurrentView] = useState<'grid' | 'list'>('grid');
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    return window.innerWidth < 768;
+  });
   const [filters, setFilters] = useState<FilterState>({
     text: '',
     category: null,
     tags: []
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   const { user, userId } = useAuth();
   const { addTool, updateTool, deleteTool, tools: firestoreTools } = useFirestore();
@@ -27,6 +29,7 @@ const Index = () => {
   useEffect(() => {
     if (firestoreTools) {
       setTools(firestoreTools);
+      setIsLoading(false);
     }
   }, [firestoreTools]);
 
@@ -249,17 +252,17 @@ const Index = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Carregando...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center animate-fade-in-scale">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-900 text-gray-100">
+    <div className="flex h-screen bg-background text-foreground w-full">
       <Sidebar
         tools={tools}
         filters={filters}
@@ -281,6 +284,7 @@ const Index = () => {
         onImportCSV={handleImportCSV}
         onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         isSidebarCollapsed={isSidebarCollapsed}
+        isLoading={isLoading}
       />
 
       <ToolModal
