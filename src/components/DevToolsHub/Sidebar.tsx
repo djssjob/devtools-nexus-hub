@@ -1,9 +1,11 @@
 
-import { ChevronLeft, ChevronRight, Rocket, Sun, Moon } from 'lucide-react';
-import { Tool, FilterState } from '@/types/devtools';
+import { ChevronLeft, ChevronRight, Rocket, Sun, Moon, Star, Clock, Filter, SortAsc } from 'lucide-react';
+import { Tool, FilterState, UserPreferences } from '@/types/devtools';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useEffect, useState } from 'react';
 
@@ -14,6 +16,11 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   userId: string | null;
+  preferences: UserPreferences;
+  showFavoritesOnly: boolean;
+  onToggleFavoritesOnly: (show: boolean) => void;
+  sortBy: 'name' | 'category' | 'rating' | 'recent';
+  onSortChange: (sort: 'name' | 'category' | 'rating' | 'recent') => void;
 }
 
 export const Sidebar = ({
@@ -22,7 +29,12 @@ export const Sidebar = ({
   onFiltersChange,
   isCollapsed,
   onToggleCollapse,
-  userId
+  userId,
+  preferences,
+  showFavoritesOnly,
+  onToggleFavoritesOnly,
+  sortBy,
+  onSortChange
 }: SidebarProps) => {
   const { theme, toggleTheme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
@@ -67,9 +79,21 @@ export const Sidebar = ({
       'DevOps': 'from-orange-500 to-red-500',
       'Design': 'from-pink-500 to-rose-500',
       'Testing': 'from-yellow-500 to-amber-500',
+      'Editor': 'from-indigo-500 to-blue-500',
+      'API Testing': 'from-teal-500 to-green-500',
     };
     return colors[category as keyof typeof colors] || 'from-gray-500 to-gray-600';
   };
+
+  const recentlyViewedTools = preferences.recentlyViewed
+    .map(id => tools.find(tool => tool.id === id))
+    .filter(tool => tool !== undefined)
+    .slice(0, 5) as Tool[];
+
+  const favoriteTools = preferences.favorites
+    .map(id => tools.find(tool => tool.id === id))
+    .filter(tool => tool !== undefined)
+    .slice(0, 5) as Tool[];
 
   return (
     <aside className={`${
@@ -90,7 +114,7 @@ export const Sidebar = ({
         />
       )}
 
-      <div className="p-6 relative z-40">
+      <div className="p-6 relative z-40 flex-1 overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8 animate-fade-in-scale">
           {!isCollapsed && (
@@ -127,10 +151,42 @@ export const Sidebar = ({
 
         {!isCollapsed && (
           <div className="space-y-6 animate-fade-in-up">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-              Filtros
-            </h3>
-            
+            {/* Quick Actions */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Ações Rápidas
+              </h3>
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">Apenas Favoritos</label>
+                  <Switch
+                    checked={showFavoritesOnly}
+                    onCheckedChange={onToggleFavoritesOnly}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm font-medium flex items-center gap-2">
+                    <SortAsc className="w-4 h-4" />
+                    Ordenar por
+                  </label>
+                  <Select value={sortBy} onValueChange={onSortChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Nome</SelectItem>
+                      <SelectItem value="category">Categoria</SelectItem>
+                      <SelectItem value="rating">Avaliação</SelectItem>
+                      <SelectItem value="recent">Recentes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
             {/* Busca */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Pesquisa por texto</label>
@@ -142,6 +198,40 @@ export const Sidebar = ({
                 className="smooth-transition focus-ring bg-background/50 backdrop-blur-sm"
               />
             </div>
+
+            {/* Recently Viewed */}
+            {recentlyViewedTools.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Visto Recentemente
+                </h4>
+                <div className="space-y-1">
+                  {recentlyViewedTools.map(tool => (
+                    <div key={tool.id} className="text-xs p-2 rounded bg-muted/50 truncate">
+                      {tool.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Favorites */}
+            {favoriteTools.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                  <Star className="w-4 h-4" />
+                  Favoritos
+                </h4>
+                <div className="space-y-1">
+                  {favoriteTools.map(tool => (
+                    <div key={tool.id} className="text-xs p-2 rounded bg-yellow-100 dark:bg-yellow-900/20 truncate">
+                      {tool.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Categorias */}
             <div className="space-y-3">

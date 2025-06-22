@@ -1,8 +1,12 @@
 
 import { useState } from 'react';
-import { Plus, Grid3X3, List, ChevronLeft, ChevronRight, Upload, Download, Filter } from 'lucide-react';
-import { Tool } from '@/types/devtools';
+import { 
+  Plus, Grid3X3, List, ChevronLeft, ChevronRight, Upload, Download, 
+  Filter, BarChart3, HelpCircle, Clock, Star
+} from 'lucide-react';
+import { Tool, UserPreferences } from '@/types/devtools';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ToolGrid } from './ToolGrid';
 import { ToolList } from './ToolList';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
@@ -20,6 +24,15 @@ interface MainContentProps {
   onToggleSidebar: () => void;
   isSidebarCollapsed: boolean;
   isLoading?: boolean;
+  preferences: UserPreferences;
+  onToggleFavorite: (toolId: string) => void;
+  onToolClick: (toolId: string) => void;
+  onOpenNotes: (tool: Tool) => void;
+  onRating: (toolId: string, rating: number) => void;
+  onAddToComparison: (tool: Tool) => void;
+  onOpenComparison: () => void;
+  comparisonCount: number;
+  onOpenHelp: () => void;
 }
 
 export const MainContent = ({
@@ -34,11 +47,21 @@ export const MainContent = ({
   onImportCSV,
   onToggleSidebar,
   isSidebarCollapsed,
-  isLoading = false
+  isLoading = false,
+  preferences,
+  onToggleFavorite,
+  onToolClick,
+  onOpenNotes,
+  onRating,
+  onAddToComparison,
+  onOpenComparison,
+  comparisonCount,
+  onOpenHelp
 }: MainContentProps) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const handleContentAction = (id: string) => {
+    onToolClick(id);
     console.log(`Content action for tool: ${id}`);
   };
 
@@ -90,6 +113,50 @@ export const MainContent = ({
               title="Filtros"
             >
               <Filter />
+            </Button>
+
+            {/* Quick Stats */}
+            <div className="hidden md:flex items-center gap-2">
+              {preferences.favorites.length > 0 && (
+                <Badge variant="secondary" className="gap-1">
+                  <Star className="w-3 h-3" />
+                  {preferences.favorites.length}
+                </Badge>
+              )}
+              {preferences.recentlyViewed.length > 0 && (
+                <Badge variant="secondary" className="gap-1">
+                  <Clock className="w-3 h-3" />
+                  {preferences.recentlyViewed.length}
+                </Badge>
+              )}
+            </div>
+
+            {/* Comparison Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onOpenComparison}
+              className="glass relative"
+              title="Comparar ferramentas"
+            >
+              <BarChart3 className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Comparar</span>
+              {comparisonCount > 0 && (
+                <Badge variant="destructive" className="absolute -top-2 -right-2 w-5 h-5 p-0 text-xs">
+                  {comparisonCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Help Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onOpenHelp}
+              className="glass"
+              title="Ajuda e atalhos (?)"
+            >
+              <HelpCircle className="w-4 h-4" />
             </Button>
 
             {/* View Toggle */}
@@ -180,6 +247,11 @@ export const MainContent = ({
               onEdit={onEditTool}
               onDelete={onDeleteTool}
               onContent={handleContentAction}
+              preferences={preferences}
+              onToggleFavorite={onToggleFavorite}
+              onOpenNotes={onOpenNotes}
+              onRating={onRating}
+              onAddToComparison={onAddToComparison}
             />
           </div>
         ) : (
@@ -189,6 +261,11 @@ export const MainContent = ({
               onEdit={onEditTool}
               onDelete={onDeleteTool}
               onContent={handleContentAction}
+              preferences={preferences}
+              onToggleFavorite={onToggleFavorite}
+              onOpenNotes={onOpenNotes}
+              onRating={onRating}
+              onAddToComparison={onAddToComparison}
             />
           </div>
         )}
