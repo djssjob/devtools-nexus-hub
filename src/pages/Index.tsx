@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/DevToolsHub/Sidebar';
 import { MainContent } from '@/components/DevToolsHub/MainContent';
@@ -15,6 +14,7 @@ import { useUserPreferences } from '@/hooks/useUserPreferences';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { Tool } from '@/types/devtools';
 import { toast } from '@/hooks/use-toast';
+import { useFileOperations } from '@/hooks/useFileOperations';
 
 const Index = () => {
   const [tools, setTools] = useState<Tool[]>([]);
@@ -39,7 +39,7 @@ const Index = () => {
     handleSaveTool
   } = useToolOperations(userId);
   
-  const { handleExportCSV, handleImportCSV } = useCSVOperations(userId);
+  const { handleExportCSV, handleExportTXT, handleImportCSV, handleImportTXT } = useFileOperations(userId);
   
   const {
     filteredTools,
@@ -164,7 +164,9 @@ const Index = () => {
         onEditTool={handleEditTool}
         onDeleteTool={handleDeleteTool}
         onExportCSV={() => handleExportCSV(tools)}
+        onExportTXT={() => handleExportTXT(tools)}
         onImportCSV={handleImportCSV}
+        onImportTXT={handleImportTXT}
         onToggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         isSidebarCollapsed={isSidebarCollapsed}
         isLoading={isLoading}
@@ -177,6 +179,7 @@ const Index = () => {
         onOpenComparison={openComparison}
         comparisonCount={comparisonTools.length}
         onOpenHelp={openHelp}
+        onSaveTool={handleSaveTool}
       />
 
       <ToolModal

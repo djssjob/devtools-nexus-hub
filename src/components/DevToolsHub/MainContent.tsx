@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { 
   Plus, Grid3X3, List, ChevronLeft, ChevronRight, Upload, Download, 
-  Filter, BarChart3, HelpCircle, Clock, Star
+  Filter, BarChart3, HelpCircle, Clock, Star, MessageSquare, FileText, BookOpen
 } from 'lucide-react';
 import { Tool, UserPreferences } from '@/types/devtools';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { ToolGrid } from './ToolGrid';
 import { ToolList } from './ToolList';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { AIChat } from './AIChat';
+import { DocumentationModal } from './DocumentationModal';
 
 interface MainContentProps {
   tools: Tool[];
@@ -20,7 +22,9 @@ interface MainContentProps {
   onEditTool: (tool: Tool) => void;
   onDeleteTool: (id: string) => void;
   onExportCSV: () => void;
+  onExportTXT: () => void;
   onImportCSV: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onImportTXT: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onToggleSidebar: () => void;
   isSidebarCollapsed: boolean;
   isLoading?: boolean;
@@ -33,6 +37,7 @@ interface MainContentProps {
   onOpenComparison: () => void;
   comparisonCount: number;
   onOpenHelp: () => void;
+  onSaveTool: (toolData: any) => void;
 }
 
 export const MainContent = ({
@@ -44,7 +49,9 @@ export const MainContent = ({
   onEditTool,
   onDeleteTool,
   onExportCSV,
+  onExportTXT,
   onImportCSV,
+  onImportTXT,
   onToggleSidebar,
   isSidebarCollapsed,
   isLoading = false,
@@ -56,13 +63,20 @@ export const MainContent = ({
   onAddToComparison,
   onOpenComparison,
   comparisonCount,
-  onOpenHelp
+  onOpenHelp,
+  onSaveTool
 }: MainContentProps) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isDocumentationOpen, setIsDocumentationOpen] = useState(false);
 
   const handleContentAction = (id: string) => {
     onToolClick(id);
     console.log(`Content action for tool: ${id}`);
+  };
+
+  const handleAIAddTool = (toolData: any) => {
+    onSaveTool(toolData);
   };
 
   return (
@@ -131,6 +145,30 @@ export const MainContent = ({
               )}
             </div>
 
+            {/* AI Chat Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAIChatOpen(true)}
+              className="glass relative"
+              title="Chat com IA"
+            >
+              <MessageSquare className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">IA</span>
+            </Button>
+
+            {/* Documentation Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDocumentationOpen(true)}
+              className="glass"
+              title="Documentação"
+            >
+              <BookOpen className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Docs</span>
+            </Button>
+
             {/* Comparison Button */}
             <Button
               variant="outline"
@@ -190,26 +228,71 @@ export const MainContent = ({
                 className="hidden"
                 id="csv-import"
               />
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => document.getElementById('csv-import')?.click()}
-                className="glass button-glow hidden sm:flex"
-                title="Importar de CSV"
-              >
-                <Upload className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Importar</span>
-              </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onExportCSV}
-                className="glass button-glow hidden sm:flex"
-                title="Exportar para CSV"
-              >
-                <Download className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">Exportar</span>
-              </Button>
+              <input
+                type="file"
+                accept=".txt"
+                onChange={onImportTXT}
+                className="hidden"
+                id="txt-import"
+              />
+              
+              {/* Import Dropdown */}
+              <div className="relative group">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="glass button-glow hidden sm:flex"
+                  title="Importar"
+                >
+                  <Upload className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Importar</span>
+                </Button>
+                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-1 min-w-32">
+                    <button
+                      onClick={() => document.getElementById('csv-import')?.click()}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                    >
+                      Importar CSV
+                    </button>
+                    <button
+                      onClick={() => document.getElementById('txt-import')?.click()}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                    >
+                      Importar TXT
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Export Dropdown */}
+              <div className="relative group">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="glass button-glow hidden sm:flex"
+                  title="Exportar"
+                >
+                  <Download className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Exportar</span>
+                </Button>
+                <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div className="py-1 min-w-32">
+                    <button
+                      onClick={onExportCSV}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                    >
+                      Exportar CSV
+                    </button>
+                    <button
+                      onClick={onExportTXT}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+                    >
+                      Exportar TXT
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Add Button */}
@@ -270,6 +353,18 @@ export const MainContent = ({
           </div>
         )}
       </div>
+
+      {/* Modais */}
+      <AIChat
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
+        onAddTool={handleAIAddTool}
+      />
+
+      <DocumentationModal
+        isOpen={isDocumentationOpen}
+        onClose={() => setIsDocumentationOpen(false)}
+      />
     </main>
   );
 };
